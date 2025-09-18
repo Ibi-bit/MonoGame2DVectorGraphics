@@ -153,4 +153,3 @@ MIT or custom license as defined by the developer.
 
 ---
 
-Let me know if you'd like this exported as a file or want an auto-generated HTML version too.x
