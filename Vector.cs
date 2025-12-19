@@ -79,6 +79,66 @@ namespace VectorGraphics
                     0
                 );
             }
+
+            public static void Draw(
+                SpriteBatch spriteBatch,
+                PrimitiveBatch primitiveBatch,
+                Vector2 start,
+                Vector2 end,
+                Color color,
+                float width
+            )
+            {
+                Vector2 edge = end - start;
+                float angle = (float)Math.Atan2(edge.Y, edge.X);
+                spriteBatch.Draw(
+                    primitiveBatch.whitePixel,
+                    new Microsoft.Xna.Framework.Rectangle(
+                        (int)(start.X),
+                        (int)(start.Y),
+                        (int)edge.Length(),
+                        (int)width
+                    ),
+                    null,
+                    color,
+                    angle,
+                    Vector2.Zero,
+                    SpriteEffects.None,
+                    0
+                );
+            }
+
+            public static Vector2 ConstrainToSide(
+                Vector2 position,
+                Vector2 start,
+                Vector2 end,
+                float particleRadius = 5f
+            )
+            {
+                Vector2 lineDir = end - start;
+                float lineLength = lineDir.Length();
+
+                if (lineLength < 0.001f)
+                    return position;
+
+                lineDir /= lineLength;
+
+                Vector2 lineNormal = new Vector2(-lineDir.Y, lineDir.X);
+                Vector2 toParticle = position - start;
+
+                float side = Vector2.Dot(toParticle, lineNormal);
+                float projection = Vector2.Dot(toParticle, lineDir);
+                projection = Math.Clamp(projection, 0, lineLength);
+
+                Vector2 closestPoint = start + lineDir * projection;
+
+                if (side < particleRadius)
+                {
+                    position = closestPoint + lineNormal * particleRadius;
+                }
+
+                return position;
+            }
         }
 
         public class Circle : Shape
@@ -151,6 +211,7 @@ namespace VectorGraphics
         public class Rectangle : Shape
         {
             public Vector2 size;
+            public float edgeWidth;
 
             public Rectangle(Vector2 position, Vector2 size, Color color, bool filled = true)
                 : base(position, color, filled)
@@ -161,25 +222,66 @@ namespace VectorGraphics
             public Rectangle(
                 Microsoft.Xna.Framework.Rectangle rectangle,
                 Color color,
-                bool filled = true
+                bool filled = true,
+                float edgeWidth = 0
             )
                 : base(new Vector2(rectangle.X, rectangle.Y), color, filled)
             {
                 this.size = new Vector2(rectangle.Width, rectangle.Height);
+                this.edgeWidth = edgeWidth;
             }
 
             public override void Draw(SpriteBatch spriteBatch, PrimitiveBatch primitiveBatch)
             {
-                spriteBatch.Draw(
-                    primitiveBatch.whitePixel,
-                    new Microsoft.Xna.Framework.Rectangle(
-                        (int)(position.X),
-                        (int)(position.Y),
-                        (int)size.X,
-                        (int)size.Y
-                    ),
-                    color
-                );
+                if (filled)
+                {
+                    spriteBatch.Draw(
+                        primitiveBatch.whitePixel,
+                        new Microsoft.Xna.Framework.Rectangle(
+                            (int)(position.X),
+                            (int)(position.Y),
+                            (int)size.X,
+                            (int)size.Y
+                        ),
+                        color
+                    );
+                }
+                if (edgeWidth > 0)
+                {
+                    float halfWidth = edgeWidth / 2f;
+                    Line.Draw(
+                        spriteBatch,
+                        primitiveBatch,
+                        position + new Vector2(0, halfWidth),
+                        new Vector2(position.X + size.X, position.Y + halfWidth),
+                        color,
+                        edgeWidth
+                    );
+                    Line.Draw(
+                        spriteBatch,
+                        primitiveBatch,
+                        new Vector2(position.X + size.X + halfWidth, position.Y),
+                        new Vector2(position.X + size.X + halfWidth, position.Y + size.Y),
+                        color,
+                        edgeWidth
+                    );
+                    Line.Draw(
+                        spriteBatch,
+                        primitiveBatch,
+                        new Vector2(position.X, position.Y + size.Y - halfWidth),
+                        new Vector2(position.X + size.X, position.Y + size.Y - halfWidth),
+                        color,
+                        edgeWidth
+                    );
+                    Line.Draw(
+                        spriteBatch,
+                        primitiveBatch,
+                        new Vector2(position.X - halfWidth, position.Y),
+                        new Vector2(position.X - halfWidth, position.Y + size.Y),
+                        color,
+                        edgeWidth
+                    );
+                }
             }
         }
 
