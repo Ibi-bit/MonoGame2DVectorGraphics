@@ -212,6 +212,7 @@ namespace VectorGraphics
         {
             public Vector2 size;
             public float edgeWidth;
+            public Color edgeColor;
 
             public Rectangle(Vector2 position, Vector2 size, Color color, bool filled = true)
                 : base(position, color, filled)
@@ -223,12 +224,14 @@ namespace VectorGraphics
                 Microsoft.Xna.Framework.Rectangle rectangle,
                 Color color,
                 bool filled = true,
-                float edgeWidth = 0
+                float edgeWidth = 0,
+                Color? edgeColor = null
             )
                 : base(new Vector2(rectangle.X, rectangle.Y), color, filled)
             {
                 this.size = new Vector2(rectangle.Width, rectangle.Height);
                 this.edgeWidth = edgeWidth;
+                this.edgeColor = edgeColor ?? color;
             }
 
             public override void Draw(SpriteBatch spriteBatch, PrimitiveBatch primitiveBatch)
