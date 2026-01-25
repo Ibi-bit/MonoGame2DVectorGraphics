@@ -255,33 +255,33 @@ namespace VectorGraphics
                     Line.Draw(
                         spriteBatch,
                         primitiveBatch,
-                        position + new Vector2(0, halfWidth),
-                        new Vector2(position.X + size.X, position.Y + halfWidth),
-                        color,
+                        position,
+                        new Vector2(position.X + size.X, position.Y),
+                        edgeColor,
                         edgeWidth
                     );
                     Line.Draw(
                         spriteBatch,
                         primitiveBatch,
-                        new Vector2(position.X + size.X + halfWidth, position.Y),
-                        new Vector2(position.X + size.X + halfWidth, position.Y + size.Y),
-                        color,
+                        new Vector2(position.X + size.X, position.Y),
+                        new Vector2(position.X + size.X, position.Y + size.Y),
+                        edgeColor,
                         edgeWidth
                     );
                     Line.Draw(
                         spriteBatch,
                         primitiveBatch,
-                        new Vector2(position.X, position.Y + size.Y - halfWidth),
-                        new Vector2(position.X + size.X, position.Y + size.Y - halfWidth),
-                        color,
+                        new Vector2(position.X, position.Y + size.Y),
+                        new Vector2(position.X + size.X, position.Y + size.Y),
+                        edgeColor,
                         edgeWidth
                     );
                     Line.Draw(
                         spriteBatch,
                         primitiveBatch,
-                        new Vector2(position.X - halfWidth, position.Y),
-                        new Vector2(position.X - halfWidth, position.Y + size.Y),
-                        color,
+                        position,
+                        new Vector2(position.X, position.Y + size.Y),
+                        edgeColor,
                         edgeWidth
                     );
                 }
