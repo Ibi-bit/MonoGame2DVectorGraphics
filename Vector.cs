@@ -10,19 +10,19 @@ namespace VectorGraphics
         public Texture2D circleTextureFilled;
         public GraphicsDevice graphicsDevice;
 
-        public PrimitiveBatch(GraphicsDevice graphicsDevice)
+        public PrimitiveBatch(GraphicsDevice graphicsDevice,float circleRadius = 75f)
         {
             this.graphicsDevice = graphicsDevice;
-            CreateTextures();
+            CreateTextures(circleRadius);
         }
 
-        public void CreateTextures()
+        public void CreateTextures(float circleRadius = 75f)
         {
             whitePixel = new Texture2D(graphicsDevice, 1, 1);
             whitePixel.SetData(new[] { Color.White });
             circleTextureFilled = Circle.CreateCircleTexture(
                 Vector2.Zero,
-                1000,
+                75,
                 Color.White,
                 true,
                 this
