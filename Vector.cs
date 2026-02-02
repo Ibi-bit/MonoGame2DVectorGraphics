@@ -7,6 +7,7 @@ namespace VectorGraphics
     public class PrimitiveBatch
     {
         public Texture2D whitePixel;
+        public Texture2D circleTextureFilled;
         public GraphicsDevice graphicsDevice;
 
         public PrimitiveBatch(GraphicsDevice graphicsDevice)
@@ -19,6 +20,13 @@ namespace VectorGraphics
         {
             whitePixel = new Texture2D(graphicsDevice, 1, 1);
             whitePixel.SetData(new[] { Color.White });
+            circleTextureFilled = Circle.CreateCircleTexture(
+                Vector2.Zero,
+                1000,
+                Color.White,
+                true,
+                this
+            );
         }
 
         public abstract class Shape
@@ -153,8 +161,43 @@ namespace VectorGraphics
 
             public override void Draw(SpriteBatch spriteBatch, PrimitiveBatch primitiveBatch)
             {
-                int cx = (int)position.X;
-                int cy = (int)position.Y;
+                float scl = (radius * 2) / primitiveBatch.circleTextureFilled.Height;
+                var scale = new Vector2(scl);
+                spriteBatch.Draw(
+                    primitiveBatch.circleTextureFilled,
+                    position - new Vector2(radius, radius),
+                    null,
+                    color,
+                    0f,
+                    Vector2.Zero,
+                    scale,
+                    SpriteEffects.None,
+                    0f
+                );
+            }
+
+            public static Texture2D CreateCircleTexture(
+                Vector2 position,
+                float radius,
+                Color color,
+                bool filled = true,
+                PrimitiveBatch primitiveBatch = null
+            )
+            {
+                int diameter = (int)(radius * 2);
+
+                Texture2D texture = new Texture2D(
+                    primitiveBatch.graphicsDevice,
+                    diameter,
+                    diameter
+                );
+                Color[] data = new Color[diameter * diameter];
+
+                for (int i = 0; i < data.Length; i++)
+                    data[i] = Color.Transparent;
+
+                int cx = diameter / 2;
+                int cy = diameter / 2;
                 int r = (int)radius;
                 int x = 0;
                 int y = r;
@@ -162,15 +205,24 @@ namespace VectorGraphics
 
                 void PlotCirclePoints(int xc, int yc, int x, int y)
                 {
-                    spriteBatch.Draw(primitiveBatch.whitePixel, new Vector2(xc + x, yc + y), color);
-                    spriteBatch.Draw(primitiveBatch.whitePixel, new Vector2(xc - x, yc + y), color);
-                    spriteBatch.Draw(primitiveBatch.whitePixel, new Vector2(xc + x, yc - y), color);
-                    spriteBatch.Draw(primitiveBatch.whitePixel, new Vector2(xc - x, yc - y), color);
-                    spriteBatch.Draw(primitiveBatch.whitePixel, new Vector2(xc + y, yc + x), color);
-                    spriteBatch.Draw(primitiveBatch.whitePixel, new Vector2(xc - y, yc + x), color);
-                    spriteBatch.Draw(primitiveBatch.whitePixel, new Vector2(xc + y, yc - x), color);
-                    spriteBatch.Draw(primitiveBatch.whitePixel, new Vector2(xc - y, yc - x), color);
+                    if (xc + x >= 0 && xc + x < diameter && yc + y >= 0 && yc + y < diameter)
+                        data[(yc + y) * diameter + (xc + x)] = color;
+                    if (xc - x >= 0 && xc - x < diameter && yc + y >= 0 && yc + y < diameter)
+                        data[(yc + y) * diameter + (xc - x)] = color;
+                    if (xc + x >= 0 && xc + x < diameter && yc - y >= 0 && yc - y < diameter)
+                        data[(yc - y) * diameter + (xc + x)] = color;
+                    if (xc - x >= 0 && xc - x < diameter && yc - y >= 0 && yc - y < diameter)
+                        data[(yc - y) * diameter + (xc - x)] = color;
+                    if (xc + y >= 0 && xc + y < diameter && yc + x >= 0 && yc + x < diameter)
+                        data[(yc + x) * diameter + (xc + y)] = color;
+                    if (xc - y >= 0 && xc - y < diameter && yc + x >= 0 && yc + x < diameter)
+                        data[(yc + x) * diameter + (xc - y)] = color;
+                    if (xc + y >= 0 && xc + y < diameter && yc - x >= 0 && yc - x < diameter)
+                        data[(yc - x) * diameter + (xc + y)] = color;
+                    if (xc - y >= 0 && xc - y < diameter && yc - x >= 0 && yc - x < diameter)
+                        data[(yc - x) * diameter + (xc - y)] = color;
                 }
+
                 void FillCircle(int x, int y, int r)
                 {
                     for (int i = -r; i <= r; i++)
@@ -179,11 +231,10 @@ namespace VectorGraphics
                         {
                             if (i * i + j * j <= r * r)
                             {
-                                spriteBatch.Draw(
-                                    primitiveBatch.whitePixel,
-                                    new Vector2(x + i, y + j),
-                                    color
-                                );
+                                int px = x + i;
+                                int py = y + j;
+                                if (px >= 0 && px < diameter && py >= 0 && py < diameter)
+                                    data[py * diameter + px] = color;
                             }
                         }
                     }
@@ -205,6 +256,9 @@ namespace VectorGraphics
                         d = d + 4 * x + 6;
                     }
                 }
+
+                texture.SetData(data);
+                return texture;
             }
         }
 
