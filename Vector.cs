@@ -82,7 +82,7 @@ namespace VectorGraphics
                     null,
                     color,
                     angle,
-                    Vector2.Zero,
+                    new Vector2(0, 0.5f),  
                     SpriteEffects.None,
                     0
                 );
@@ -110,7 +110,7 @@ namespace VectorGraphics
                     null,
                     color,
                     angle,
-                    Vector2.Zero,
+                    new Vector2(0, 0.5f),
                     SpriteEffects.None,
                     0
                 );
