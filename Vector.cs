@@ -267,6 +267,7 @@ namespace VectorGraphics
             public Vector2 size;
             public float edgeWidth;
             public Color edgeColor;
+            public float rotation;
 
             public Rectangle(Vector2 position, Vector2 size, Color color, bool filled = true)
                 : base(position, color, filled)
@@ -292,16 +293,33 @@ namespace VectorGraphics
             {
                 if (filled)
                 {
-                    spriteBatch.Draw(
-                        primitiveBatch.whitePixel,
-                        new Microsoft.Xna.Framework.Rectangle(
-                            (int)(position.X),
-                            (int)(position.Y),
-                            (int)size.X,
-                            (int)size.Y
-                        ),
-                        color
-                    );
+                    if (rotation < 0)
+                    {
+                        spriteBatch.Draw(
+                            primitiveBatch.whitePixel,
+                            new Microsoft.Xna.Framework.Rectangle(
+                                (int)(position.X),
+                                (int)(position.Y),
+                                (int)size.X,
+                                (int)size.Y
+                            ),
+                            color
+                        );
+                    }
+                    else
+                    {
+                        spriteBatch.Draw(
+                            primitiveBatch.whitePixel,
+                            position+size/2f,
+                            new Microsoft.Xna.Framework.Rectangle(0, 0, 1, 1),
+                            color,
+                            rotation,
+                            Vector2.One / 2f,
+                            size,
+                            SpriteEffects.None,
+                            0f
+                        );
+                    }
                 }
                 if (edgeWidth > 0)
                 {
