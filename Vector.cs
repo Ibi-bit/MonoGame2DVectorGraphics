@@ -483,7 +483,6 @@ namespace VectorGraphics
             {
                 if (filled)
                 {
-                    // Barycentric method for filling triangle
                     Vector2 v0 = point2 - position;
                     Vector2 v1 = point3 - position;
                     float area = v0.X * v1.Y - v0.Y * v1.X;
