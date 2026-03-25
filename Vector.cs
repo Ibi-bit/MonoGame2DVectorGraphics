@@ -10,7 +10,7 @@ namespace VectorGraphics
         public Texture2D circleTextureFilled;
         public GraphicsDevice graphicsDevice;
 
-        public PrimitiveBatch(GraphicsDevice graphicsDevice,float circleRadius = 75f)
+        public PrimitiveBatch(GraphicsDevice graphicsDevice, float circleRadius = 75f)
         {
             this.graphicsDevice = graphicsDevice;
             CreateTextures(circleRadius);
@@ -82,7 +82,7 @@ namespace VectorGraphics
                     null,
                     color,
                     angle,
-                    new Vector2(0, 0.5f),  
+                    new Vector2(0, 0.5f),
                     SpriteEffects.None,
                     0
                 );
@@ -310,7 +310,7 @@ namespace VectorGraphics
                     {
                         spriteBatch.Draw(
                             primitiveBatch.whitePixel,
-                            position+size/2f,
+                            position + size / 2f,
                             new Microsoft.Xna.Framework.Rectangle(0, 0, 1, 1),
                             color,
                             rotation,
@@ -374,55 +374,55 @@ namespace VectorGraphics
             {
                 float innerWidth = size.X - 2 * cornerRadius;
                 float innerHeight = size.Y - 2 * cornerRadius;
-                var centerRect = new PrimitiveBatch.Rectangle(
+                var centerRect = new Rectangle(
                     position + new Vector2(cornerRadius, cornerRadius),
                     new Vector2(innerWidth, innerHeight),
                     color
                 );
                 centerRect.Draw(spriteBatch, primitiveBatch);
-                var topRect = new PrimitiveBatch.Rectangle(
+                var topRect = new Rectangle(
                     position + new Vector2(cornerRadius, 0),
                     new Vector2(innerWidth, cornerRadius),
                     color
                 );
                 topRect.Draw(spriteBatch, primitiveBatch);
-                var bottomRect = new PrimitiveBatch.Rectangle(
+                var bottomRect = new Rectangle(
                     position + new Vector2(cornerRadius, size.Y - cornerRadius),
                     new Vector2(innerWidth, cornerRadius),
                     color
                 );
                 bottomRect.Draw(spriteBatch, primitiveBatch);
-                var leftRect = new PrimitiveBatch.Rectangle(
+                var leftRect = new Rectangle(
                     position + new Vector2(0, cornerRadius),
                     new Vector2(cornerRadius, innerHeight),
                     color
                 );
                 leftRect.Draw(spriteBatch, primitiveBatch);
-                var rightRect = new PrimitiveBatch.Rectangle(
+                var rightRect = new Rectangle(
                     position + new Vector2(size.X - cornerRadius, cornerRadius),
                     new Vector2(cornerRadius, innerHeight),
                     color
                 );
                 rightRect.Draw(spriteBatch, primitiveBatch);
-                var topLeft = new PrimitiveBatch.Circle(
+                var topLeft = new Circle(
                     position + new Vector2(cornerRadius, cornerRadius),
                     cornerRadius,
                     color
                 );
                 topLeft.Draw(spriteBatch, primitiveBatch);
-                var topRight = new PrimitiveBatch.Circle(
+                var topRight = new Circle(
                     position + new Vector2(size.X - cornerRadius, cornerRadius),
                     cornerRadius,
                     color
                 );
                 topRight.Draw(spriteBatch, primitiveBatch);
-                var bottomLeft = new PrimitiveBatch.Circle(
+                var bottomLeft = new Circle(
                     position + new Vector2(cornerRadius, size.Y - cornerRadius),
                     cornerRadius,
                     color
                 );
                 bottomLeft.Draw(spriteBatch, primitiveBatch);
-                var bottomRight = new PrimitiveBatch.Circle(
+                var bottomRight = new Circle(
                     position + new Vector2(size.X - cornerRadius, size.Y - cornerRadius),
                     cornerRadius,
                     color
@@ -544,7 +544,7 @@ namespace VectorGraphics
 
             public override void Draw(SpriteBatch spriteBatch, PrimitiveBatch primitiveBatch)
             {
-                PrimitiveBatch.Line line = new PrimitiveBatch.Line(Start, End, color, Width);
+                Line line = new Line(Start, End, color, Width);
                 line.Draw(spriteBatch, primitiveBatch);
 
                 Vector2 direction = Vector2.Normalize(End - Start);
@@ -556,12 +556,7 @@ namespace VectorGraphics
                 Vector2 arrowPoint2 =
                     End - direction * arrowHeadSize - perpendicular * (arrowHeadSize / 2);
 
-                PrimitiveBatch.Triangle triangle = new PrimitiveBatch.Triangle(
-                    End,
-                    arrowPoint1,
-                    arrowPoint2,
-                    color
-                );
+                Triangle triangle = new Triangle(End, arrowPoint1, arrowPoint2, color);
                 triangle.Draw(spriteBatch, primitiveBatch);
             }
         }
