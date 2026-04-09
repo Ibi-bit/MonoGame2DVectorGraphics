@@ -6,8 +6,17 @@ namespace VectorGraphics
 {
     public class PrimitiveBatch
     {
+        /// <summary>
+        /// a singular white pixel texture used for drawing anything rectangular including lines and rectangles, which is then scaled, rotated  and recoloured as needed to create the desired shape.
+        /// </summary>
         public Texture2D whitePixel;
+        /// <summary>
+        /// a caches texture of a a filled circle with a radius settable by the user created at the begining of the initialisation of the primitive batch 
+        /// </summary>
         public Texture2D circleTextureFilled;
+        /// <summary>
+        /// the graphics device used for creating textures and drawing, which is passed in when the PrimitiveBatch is created 
+        /// </summary>
         public GraphicsDevice graphicsDevice;
 
         public PrimitiveBatch(GraphicsDevice graphicsDevice, float circleRadius = 75f)
@@ -22,7 +31,7 @@ namespace VectorGraphics
             whitePixel.SetData(new[] { Color.White });
             circleTextureFilled = Circle.CreateCircleTexture(
                 Vector2.Zero,
-                75,
+                circleRadius,
                 Color.White,
                 true,
                 this
