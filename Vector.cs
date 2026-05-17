@@ -1,136 +1,67 @@
 using System;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
+using System.Numerics;
+using Raylib_cs;
 
 namespace VectorGraphics;
 
+using RlColor = Raylib_cs.Color;
+using RlRectangle = Raylib_cs.Rectangle;
+
 /// <summary>
-/// The PrimitiveBatch class is responsible for drawing basic shapes such as lines, circles, rectangles, and triangles using a SpriteBatch.
-/// It creates textures for a white pixel and a filled circle, which are used to draw the shapes. T
+/// Raylib-native primitive drawing helpers for lines, circles, rectangles, triangles, and arrows.
 /// </summary>
 public class PrimitiveBatch
 {
-    /// <summary>
-    /// A 1x1 white pixel texture used for drawing lines and rectangles. This texture is stretched and rotated to create the desired shapes.
-    /// </summary>
-    public Texture2D whitePixel;
+    public PrimitiveBatch(float circleRadius = 75f) { }
 
-    /// <summary>
-    /// A texture used for drawing filled circles. It is generated using the CreateCircleTexture method and is scaled to the desired radius when drawn.
-    /// This allows for efficient rendering of circles without needing to calculate individual points for each circle every frame.
-    /// </summary>
-    public Texture2D circleTextureFilled;
-    public GraphicsDevice graphicsDevice;
+    public void CreateTextures(float circleRadius = 75f) { }
 
-    public PrimitiveBatch(GraphicsDevice graphicsDevice, float circleRadius = 75f)
-    {
-        this.graphicsDevice = graphicsDevice;
-        CreateTextures(circleRadius);
-    }
-
-    /// <summary>
-    /// Creates the necessary textures for drawing primitives.
-    /// </summary>
-    /// <param name="circleRadius"></param>
-    public void CreateTextures(float circleRadius = 75f)
-    {
-        whitePixel = new Texture2D(graphicsDevice, 1, 1);
-        whitePixel.SetData(new[] { Color.White });
-        circleTextureFilled = Circle.CreateCircleTexture(Vector2.Zero, 75, Color.White, true, this);
-    }
-
-    /// <summary>
-    /// the base class for all shapes that can be drawn using the PrimitiveBatch. Each shape has a position, color and a filled property to determine if the shape should be filled or just an outline.
-    /// </summary>
     public abstract class Shape
     {
         public Vector2 position;
-        public Color color;
+        public RlColor color;
         public bool filled;
 
-        public Shape(Vector2 position, Color color, bool filled = true)
+        protected Shape(Vector2 position, RlColor color, bool filled = true)
         {
             this.position = position;
             this.color = color;
             this.filled = filled;
         }
 
-        public abstract void Draw(SpriteBatch spriteBatch, PrimitiveBatch primitiveBatch);
+        public abstract void Draw();
     }
 
-    /// <summary>
-    /// Represents a line shape defined by a start position, an end position, a color, and a width.
-    /// The line can be drawn using the Draw method, which calculates the angle and length of the line to properly render it using the white pixel texture. The ConstrainToSide method is used to constrain a point to one side of the line, which can be useful for collision detection or ensuring that particles do not cross the line.
-    /// </summary>
     public class Line : Shape
     {
         public Vector2 end;
         public float width;
 
-        public Line(Vector2 start, Vector2 end, Color color, float width)
+        public Line(Vector2 start, Vector2 end, RlColor color, float width)
             : base(start, color, false)
         {
             this.end = end;
             this.width = width;
         }
 
-        public Line(Vector2 start, float angle, float distance, Color color, float width)
+        public Line(Vector2 start, float angle, float distance, RlColor color, float width)
             : base(start, color, false)
         {
-            this.end = new Vector2(
-                (float)Math.Cos(angle) * distance,
-                (float)Math.Sin(angle) * distance
+            end = new Vector2(
+                position.X + (float)Math.Cos(angle) * distance,
+                position.Y + (float)Math.Sin(angle) * distance
             );
             this.width = width;
         }
 
-        public override void Draw(SpriteBatch spriteBatch, PrimitiveBatch primitiveBatch)
+        public override void Draw()
         {
-            Vector2 edge = end - position;
-            float angle = (float)Math.Atan2(edge.Y, edge.X);
-            spriteBatch.Draw(
-                primitiveBatch.whitePixel,
-                new Microsoft.Xna.Framework.Rectangle(
-                    (int)(position.X),
-                    (int)(position.Y),
-                    (int)edge.Length(),
-                    (int)width
-                ),
-                null,
-                color,
-                angle,
-                new Vector2(0, 0.5f),
-                SpriteEffects.None,
-                0
-            );
+            Raylib.DrawLineEx(position, end, width, color);
         }
 
-        public static void Draw(
-            SpriteBatch spriteBatch,
-            PrimitiveBatch primitiveBatch,
-            Vector2 start,
-            Vector2 end,
-            Color color,
-            float width
-        )
+        public static void Draw(Vector2 start, Vector2 end, RlColor color, float width)
         {
-            Vector2 edge = end - start;
-            float angle = (float)Math.Atan2(edge.Y, edge.X);
-            spriteBatch.Draw(
-                primitiveBatch.whitePixel,
-                new Microsoft.Xna.Framework.Rectangle(
-                    (int)(start.X),
-                    (int)(start.Y),
-                    (int)edge.Length(),
-                    (int)width
-                ),
-                null,
-                color,
-                angle,
-                new Vector2(0, 0.5f),
-                SpriteEffects.None,
-                0
-            );
+            Raylib.DrawLineEx(start, end, width, color);
         }
 
         public static Vector2 ConstrainToSide(
@@ -144,7 +75,9 @@ public class PrimitiveBatch
             float lineLength = lineDir.Length();
 
             if (lineLength < 0.001f)
+            {
                 return position;
+            }
 
             lineDir /= lineLength;
 
@@ -166,124 +99,26 @@ public class PrimitiveBatch
         }
     }
 
-    /// <summary>
-    /// Represents a circle shape defined by a center position, a radius, a color, and a filled property.
-    /// </summary>
     public class Circle : Shape
     {
         public float radius;
 
-        public Circle(Vector2 position, float radius, Color color, bool filled = true)
+        public Circle(Vector2 position, float radius, RlColor color, bool filled = true)
             : base(position, color, filled)
         {
             this.radius = radius;
         }
 
-        public override void Draw(SpriteBatch spriteBatch, PrimitiveBatch primitiveBatch)
+        public override void Draw()
         {
-            float scl = (radius * 2) / primitiveBatch.circleTextureFilled.Height;
-            var scale = new Vector2(scl);
-            spriteBatch.Draw(
-                primitiveBatch.circleTextureFilled,
-                position - new Vector2(radius, radius),
-                null,
-                color,
-                0f,
-                Vector2.Zero,
-                scale,
-                SpriteEffects.None,
-                0f
-            );
-        }
-
-        /// <summary>
-        /// creates the Circle texture by using the Midpoint Circle Algorithm to calculate the points of the circle and fill them in a texture. The method takes in the position, radius, color, and whether the circle should be filled or just an outline.
-        /// </summary>
-        /// <param name="position"></param>
-        /// <param name="radius"></param>
-        /// <param name="color"></param>
-        /// <param name="filled"></param>
-        /// <param name="primitiveBatch"></param>
-        /// <returns></returns>
-        public static Texture2D CreateCircleTexture(
-            Vector2 position,
-            float radius,
-            Color color,
-            bool filled = true,
-            PrimitiveBatch primitiveBatch = null
-        )
-        {
-            int diameter = (int)(radius * 2);
-
-            Texture2D texture = new Texture2D(primitiveBatch.graphicsDevice, diameter, diameter);
-            Color[] data = new Color[diameter * diameter];
-
-            for (int i = 0; i < data.Length; i++)
-                data[i] = Color.Transparent;
-
-            int cx = diameter / 2;
-            int cy = diameter / 2;
-            int r = (int)radius;
-            int x = 0;
-            int y = r;
-            int d = 3 - 2 * r;
-
-            void PlotCirclePoints(int xc, int yc, int x, int y)
+            if (filled)
             {
-                if (xc + x >= 0 && xc + x < diameter && yc + y >= 0 && yc + y < diameter)
-                    data[(yc + y) * diameter + (xc + x)] = color;
-                if (xc - x >= 0 && xc - x < diameter && yc + y >= 0 && yc + y < diameter)
-                    data[(yc + y) * diameter + (xc - x)] = color;
-                if (xc + x >= 0 && xc + x < diameter && yc - y >= 0 && yc - y < diameter)
-                    data[(yc - y) * diameter + (xc + x)] = color;
-                if (xc - x >= 0 && xc - x < diameter && yc - y >= 0 && yc - y < diameter)
-                    data[(yc - y) * diameter + (xc - x)] = color;
-                if (xc + y >= 0 && xc + y < diameter && yc + x >= 0 && yc + x < diameter)
-                    data[(yc + x) * diameter + (xc + y)] = color;
-                if (xc - y >= 0 && xc - y < diameter && yc + x >= 0 && yc + x < diameter)
-                    data[(yc + x) * diameter + (xc - y)] = color;
-                if (xc + y >= 0 && xc + y < diameter && yc - x >= 0 && yc - x < diameter)
-                    data[(yc - x) * diameter + (xc + y)] = color;
-                if (xc - y >= 0 && xc - y < diameter && yc - x >= 0 && yc - x < diameter)
-                    data[(yc - x) * diameter + (xc - y)] = color;
+                Raylib.DrawCircleV(position, radius, color);
             }
-
-            void FillCircle(int x, int y, int r)
+            else
             {
-                for (int i = -r; i <= r; i++)
-                {
-                    for (int j = -r; j <= r; j++)
-                    {
-                        if (i * i + j * j <= r * r)
-                        {
-                            int px = x + i;
-                            int py = y + j;
-                            if (px >= 0 && px < diameter && py >= 0 && py < diameter)
-                                data[py * diameter + px] = color;
-                        }
-                    }
-                }
+                Raylib.DrawCircleLinesV(position, radius, color);
             }
-
-            while (y >= x)
-            {
-                PlotCirclePoints(cx, cy, x, y);
-                x++;
-                if (filled)
-                    FillCircle(cx, cy, r);
-                if (d > 0)
-                {
-                    y--;
-                    d = d + 4 * (x - y) + 10;
-                }
-                else
-                {
-                    d = d + 4 * x + 6;
-                }
-            }
-
-            texture.SetData(data);
-            return texture;
         }
     }
 
@@ -291,96 +126,40 @@ public class PrimitiveBatch
     {
         public Vector2 size;
         public float edgeWidth;
-        public Color edgeColor;
+        public RlColor edgeColor;
         public float rotation;
 
-        public Rectangle(Vector2 position, Vector2 size, Color color, bool filled = true)
+        public Rectangle(Vector2 position, Vector2 size, RlColor color, bool filled = true)
             : base(position, color, filled)
         {
             this.size = size;
         }
+        
 
-        public Rectangle(
-            Microsoft.Xna.Framework.Rectangle rectangle,
-            Color color,
-            bool filled = true,
-            float edgeWidth = 0,
-            Color? edgeColor = null
-        )
-            : base(new Vector2(rectangle.X, rectangle.Y), color, filled)
+        public override void Draw()
         {
-            this.size = new Vector2(rectangle.Width, rectangle.Height);
-            this.edgeWidth = edgeWidth;
-            this.edgeColor = edgeColor ?? color;
-        }
+            var rect = new RlRectangle(position.X, position.Y, size.X, size.Y);
 
-        public override void Draw(SpriteBatch spriteBatch, PrimitiveBatch primitiveBatch)
-        {
             if (filled)
             {
-                if (rotation < 0)
+                if (Math.Abs(rotation) > 0.0001f)
                 {
-                    spriteBatch.Draw(
-                        primitiveBatch.whitePixel,
-                        new Microsoft.Xna.Framework.Rectangle(
-                            (int)(position.X),
-                            (int)(position.Y),
-                            (int)size.X,
-                            (int)size.Y
-                        ),
+                    Raylib.DrawRectanglePro(
+                        rect,
+                        new Vector2(size.X / 2f, size.Y / 2f),
+                        rotation * 57.29578f,
                         color
                     );
                 }
                 else
                 {
-                    spriteBatch.Draw(
-                        primitiveBatch.whitePixel,
-                        position + size / 2f,
-                        new Microsoft.Xna.Framework.Rectangle(0, 0, 1, 1),
-                        color,
-                        rotation,
-                        Vector2.One / 2f,
-                        size,
-                        SpriteEffects.None,
-                        0f
-                    );
+                    Raylib.DrawRectangleV(position, size, color);
                 }
             }
+
             if (edgeWidth > 0)
             {
-                float halfWidth = edgeWidth / 2f;
-                Line.Draw(
-                    spriteBatch,
-                    primitiveBatch,
-                    position,
-                    new Vector2(position.X + size.X, position.Y),
-                    edgeColor,
-                    edgeWidth
-                );
-                Line.Draw(
-                    spriteBatch,
-                    primitiveBatch,
-                    new Vector2(position.X + size.X, position.Y),
-                    new Vector2(position.X + size.X, position.Y + size.Y),
-                    edgeColor,
-                    edgeWidth
-                );
-                Line.Draw(
-                    spriteBatch,
-                    primitiveBatch,
-                    new Vector2(position.X, position.Y + size.Y),
-                    new Vector2(position.X + size.X, position.Y + size.Y),
-                    edgeColor,
-                    edgeWidth
-                );
-                Line.Draw(
-                    spriteBatch,
-                    primitiveBatch,
-                    position,
-                    new Vector2(position.X, position.Y + size.Y),
-                    edgeColor,
-                    edgeWidth
-                );
+                Raylib.DrawRectangleLinesEx(rect, edgeWidth, edgeColor);
             }
         }
     }
@@ -389,98 +168,38 @@ public class PrimitiveBatch
     {
         public float cornerRadius;
 
-        public RoundedRectangle(Vector2 position, Vector2 size, float cornerRadius, Color color)
+        public RoundedRectangle(Vector2 position, Vector2 size, float cornerRadius, RlColor color)
             : base(position, size, color)
         {
             this.cornerRadius = cornerRadius;
         }
 
-        public override void Draw(SpriteBatch spriteBatch, PrimitiveBatch primitiveBatch)
+        public override void Draw()
         {
-            float innerWidth = size.X - 2 * cornerRadius;
-            float innerHeight = size.Y - 2 * cornerRadius;
-            var centerRect = new Rectangle(
-                position + new Vector2(cornerRadius, cornerRadius),
-                new Vector2(innerWidth, innerHeight),
-                color
-            );
-            centerRect.Draw(spriteBatch, primitiveBatch);
-            var topRect = new Rectangle(
-                position + new Vector2(cornerRadius, 0),
-                new Vector2(innerWidth, cornerRadius),
-                color
-            );
-            topRect.Draw(spriteBatch, primitiveBatch);
-            var bottomRect = new Rectangle(
-                position + new Vector2(cornerRadius, size.Y - cornerRadius),
-                new Vector2(innerWidth, cornerRadius),
-                color
-            );
-            bottomRect.Draw(spriteBatch, primitiveBatch);
-            var leftRect = new Rectangle(
-                position + new Vector2(0, cornerRadius),
-                new Vector2(cornerRadius, innerHeight),
-                color
-            );
-            leftRect.Draw(spriteBatch, primitiveBatch);
-            var rightRect = new Rectangle(
-                position + new Vector2(size.X - cornerRadius, cornerRadius),
-                new Vector2(cornerRadius, innerHeight),
-                color
-            );
-            rightRect.Draw(spriteBatch, primitiveBatch);
-            var topLeft = new Circle(
-                position + new Vector2(cornerRadius, cornerRadius),
-                cornerRadius,
-                color
-            );
-            topLeft.Draw(spriteBatch, primitiveBatch);
-            var topRight = new Circle(
-                position + new Vector2(size.X - cornerRadius, cornerRadius),
-                cornerRadius,
-                color
-            );
-            topRight.Draw(spriteBatch, primitiveBatch);
-            var bottomLeft = new Circle(
-                position + new Vector2(cornerRadius, size.Y - cornerRadius),
-                cornerRadius,
-                color
-            );
-            bottomLeft.Draw(spriteBatch, primitiveBatch);
-            var bottomRight = new Circle(
-                position + new Vector2(size.X - cornerRadius, size.Y - cornerRadius),
-                cornerRadius,
-                color
-            );
-            bottomRight.Draw(spriteBatch, primitiveBatch);
-        }
-    }
+            var rect = new RlRectangle(position.X, position.Y, size.X, size.Y);
+            float roundness = cornerRadius / MathF.Max(1f, MathF.Min(size.X, size.Y) / 2f);
+            roundness = Math.Clamp(roundness, 0f, 1f);
 
-    public class RectangleTexture
-    {
-        public Vector2 size;
-        private Texture2D texture;
+            if (filled)
+            {
+                Raylib.DrawRectangleRounded(rect, roundness, 12, color);
+            }
 
-        public Texture2D CreateTexture(Vector2 size, PrimitiveBatch primitiveBatch)
-        {
-            this.size = size;
-            texture = new Texture2D(primitiveBatch.graphicsDevice, (int)size.X, (int)size.Y);
-            Color[] data = new Color[(int)size.X * (int)size.Y];
-            for (int i = 0; i < data.Length; ++i)
-                data[i] = Color.White;
-            texture.SetData(data);
-            return texture;
+            if (edgeWidth > 0)
+            {
+                Raylib.DrawRectangleRoundedLines(rect, roundness, 12, edgeColor);
+            }
         }
     }
 
     public class Pixel : Shape
     {
-        public Pixel(Vector2 position, Color color)
+        public Pixel(Vector2 position, RlColor color)
             : base(position, color, false) { }
 
-        public override void Draw(SpriteBatch spriteBatch, PrimitiveBatch primitiveBatch)
+        public override void Draw()
         {
-            spriteBatch.Draw(primitiveBatch.whitePixel, position, color);
+            Raylib.DrawPixel((int)position.X, (int)position.Y, color);
         }
     }
 
@@ -494,7 +213,7 @@ public class PrimitiveBatch
             Vector2 point1,
             Vector2 point2,
             Vector2 point3,
-            Color color,
+            RlColor color,
             bool filled = true
         )
             : base(point1, color, filled)
@@ -504,51 +223,17 @@ public class PrimitiveBatch
             this.point3 = point3;
         }
 
-        public override void Draw(SpriteBatch spriteBatch, PrimitiveBatch primitiveBatch)
+        public override void Draw()
         {
             if (filled)
             {
-                Vector2 v0 = point2 - position;
-                Vector2 v1 = point3 - position;
-                float area = v0.X * v1.Y - v0.Y * v1.X;
-
-                int minX = (int)Math.Min(position.X, Math.Min(point2.X, point3.X));
-                int maxX = (int)Math.Max(position.X, Math.Max(point2.X, point3.X));
-                int minY = (int)Math.Min(position.Y, Math.Min(point2.Y, point3.Y));
-                int maxY = (int)Math.Max(position.Y, Math.Max(point2.Y, point3.Y));
-
-                for (int y = minY; y <= maxY; y++)
-                {
-                    for (int x = minX; x <= maxX; x++)
-                    {
-                        Vector2 p = new Vector2(x, y);
-                        Vector2 v2 = p - position;
-
-                        float d00 = Vector2.Dot(v0, v0);
-                        float d01 = Vector2.Dot(v0, v1);
-                        float d11 = Vector2.Dot(v1, v1);
-                        float d20 = Vector2.Dot(v2, v0);
-                        float d21 = Vector2.Dot(v2, v1);
-
-                        float denom = d00 * d11 - d01 * d01;
-                        float a = (d11 * d20 - d01 * d21) / denom;
-                        float b = (d00 * d21 - d01 * d20) / denom;
-
-                        if (a >= 0 && b >= 0 && (a + b) <= 1)
-                        {
-                            spriteBatch.Draw(primitiveBatch.whitePixel, p, color);
-                        }
-                    }
-                }
+                Raylib.DrawTriangle(point1, point2, point3, color);
             }
             else
             {
-                var line1 = new Line(position, point2, color, 1);
-                var line2 = new Line(point2, point3, color, 1);
-                var line3 = new Line(point3, position, color, 1);
-                line1.Draw(spriteBatch, primitiveBatch);
-                line2.Draw(spriteBatch, primitiveBatch);
-                line3.Draw(spriteBatch, primitiveBatch);
+                Raylib.DrawLineEx(point1, point2, 1f, color);
+                Raylib.DrawLineEx(point2, point3, 1f, color);
+                Raylib.DrawLineEx(point3, point1, 1f, color);
             }
         }
     }
@@ -559,7 +244,7 @@ public class PrimitiveBatch
         public Vector2 End;
         public float Width;
 
-        public Arrow(Vector2 start, Vector2 end, Color color, float width = 2.0f)
+        public Arrow(Vector2 start, Vector2 end, RlColor color, float width = 2.0f)
             : base(start, color, false)
         {
             Start = start;
@@ -567,10 +252,10 @@ public class PrimitiveBatch
             Width = width;
         }
 
-        public override void Draw(SpriteBatch spriteBatch, PrimitiveBatch primitiveBatch)
+        public override void Draw()
         {
             Line line = new Line(Start, End, color, Width);
-            line.Draw(spriteBatch, primitiveBatch);
+            line.Draw();
 
             Vector2 direction = Vector2.Normalize(End - Start);
             Vector2 perpendicular = new Vector2(-direction.Y, direction.X);
@@ -582,7 +267,7 @@ public class PrimitiveBatch
                 End - direction * arrowHeadSize - perpendicular * (arrowHeadSize / 2);
 
             Triangle triangle = new Triangle(End, arrowPoint1, arrowPoint2, color);
-            triangle.Draw(spriteBatch, primitiveBatch);
+            triangle.Draw();
         }
     }
 }
